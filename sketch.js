@@ -17,7 +17,7 @@ var velComponentMax = 30;
 var velInherit = 0.5;       // Amount of velocity to inherit
  
 var nodeBaseline = 100; // Lowest radius of a node
-var nodeScale = 0.35;   // Scale factor of a node's size
+var nodeScale = 0.5;   // Scale factor of a node's size
 
 var keyRange = 1;     // Local range of notes
 
@@ -179,6 +179,9 @@ function note(frequency, duration, x, y){
   this.hue = floor(hue);
 
   this.frequency = frequency;
+  this.scale = nodeBaseline + nodeScale * (scale[scale.length - 1] - frequency);
+
+  console.log(this.scale);
 
   this.completed = function(){ return (millis() >= this.end); }
 }
@@ -191,8 +194,6 @@ note.prototype.start = function(amplitude){
 note.prototype.stop = function(){
   this.osc.stop();
   this.osc.disconnect();
-
-  console.log("stop");
 
   delete(this.env);
   delete(this.osc);
@@ -220,9 +221,7 @@ note.prototype.update = function(){
     this.vY *= -1;
   }
 
-  var m = nodeBaseline + nodeScale * (this.frequency - scale[0]);
-
   colorMode(HSB);
-  fill(this.hue, 50, 40 + 160 * p, sq(epsilon/255));
-  ellipse(this.xPos, this.yPos, m * p, m * p);
+  fill(this.hue, 50, 20 + 200 * p, sq(epsilon/255));
+  ellipse(this.xPos, this.yPos, this.scale * p, this.scale * p);
 }

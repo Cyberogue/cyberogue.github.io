@@ -219,7 +219,7 @@ note.prototype.update = function(){
   }
 
   if (this.yPos < localScale){ 
-    this.yPos = localScale;
+    this.yPos = localScale;  
     this.vY *= -1;
   }else if (this.yPos > windowHeight - localScale){ 
     this.yPos = windowHeight - localScale;

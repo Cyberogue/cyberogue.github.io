@@ -15,7 +15,7 @@ var toneAmp = 1;      // Tone amplitude
 
 var velComponentMax = 30;
 var velInherit = 0.5;       // Amount of velocity to inherit
- 
+
 var nodeBaseline = 100; // Lowest radius of a node
 var nodeScale = 0.5;   // Scale factor of a node's size
 
@@ -56,8 +56,13 @@ var hue;
 
 function setup() {
 // Create canvas
-  createCanvas(windowWidth, windowHeight);
-  background(bgIdleColor);
+createCanvas(windowWidth, windowHeight);
+background(bgIdleColor);
+
+// Config
+noStroke();
+noCursor();
+
 // Create noise
 noise = new p5.Noise();
 noise.setType('pink');
@@ -73,69 +78,68 @@ hue = random(255);
 }
 
 function draw() {
-  // Clear background
-  background(lerp(bgIdleColor, bgActiveColor, 1.5 * sq(epsilon / 255)));
+// Clear background
+background(lerp(bgIdleColor, bgActiveColor, 1.5 * sq(epsilon / 255)));
 
-  mouseDx = lerp(mouseDx, mouseX - pmouseX, mSmooth);
-  mouseDy = lerp(mouseDy, mouseY - pmouseY, mSmooth);
+mouseDx = lerp(mouseDx, mouseX - pmouseX, mSmooth);
+mouseDy = lerp(mouseDy, mouseY - pmouseY, mSmooth);
 
-  // Delta mouse
-  dMouse = sqrt(sq(mouseDx) + sq(mouseDy));
+// Delta mouse
+dMouse = sqrt(sq(mouseDx) + sq(mouseDy));
 
-  // Epsilon calculations
-  var eNew = dMouse * 256 / mouseMax;
-  if (eNew >= epsilon){
-    epsilon = constrain(lerp(eNew, epsilon, smoothHigh), 0, 255);
-  }else{
-    epsilon = constrain(lerp(eNew, epsilon, smoothLow), 0, 255);
-  }
+// Epsilon calculations
+var eNew = dMouse * 256 / mouseMax;
+if (eNew >= epsilon){
+  epsilon = constrain(lerp(eNew, epsilon, smoothHigh), 0, 255);
+}else{
+  epsilon = constrain(lerp(eNew, epsilon, smoothLow), 0, 255);
+}
 
-  var mouseVel = mag(mouseDx, mouseDy);
-  if (mouseVel > mouseDeadzone && millis() >= mNext){
-    // Calculate time until next note
-    var beat = 60000 / bpm;
-    var n = floor(constrain(mouseVel, 0, mouseMax) / mouseMax * mouseStep);
-    var note = 2 * beat / pow(2, n);
+var mouseVel = mag(mouseDx, mouseDy);
+if (mouseVel > mouseDeadzone && millis() >= mNext){
+// Calculate time until next note
+var beat = 60000 / bpm;
+var n = floor(constrain(mouseVel, 0, mouseMax) / mouseMax * mouseStep);
+var note = 2 * beat / pow(2, n);
 
-    mNext = millis() + note;
+mNext = millis() + note;
 
-    // Create note
-    createNote(note * 4, 1 - sq(1 - epsilon/255));
-  }
+// Create note
+createNote(note * 4, 1 - sq(1 - epsilon/255));
+}
 
-  // Noise amplitude
-  noise.amp(noiseAmp * sq(1 - epsilon/255)); // Max amp of 0.5
+// Noise amplitude
+noise.amp(noiseAmp * sq(1 - epsilon/255)); // Max amp of 0.5
 
-  // Update nodes
-  noStroke();
-  for (var i = 0; i < notes.length; i++){
-    if (notes[i].completed()){
-      // Delete note
-      var n = notes.shift();
-      n.stop();
+// Update nodes
+for (var i = 0; i < notes.length; i++){
+  if (notes[i].completed()){
+// Delete note
+var n = notes.shift();
+n.stop();
 
-     delete(n);
-      i--;
-    }else{
-      // Update note
-      notes[i].update();
-    }
-  }
+delete(n);
+i--;
+}else{
+// Update note
+notes[i].update();
+}
+}
 
-  // Draw line between remaining nodes
-  colorMode(HSB);
-  strokeWeight(2);
-  for (var i = 1; i < notes.length; i++){
-    var n0 = notes[i-1];
-    var n1 = notes[i];
+// Draw line between remaining nodes
+colorMode(HSB);
+strokeWeight(2);
+for (var i = 1; i < notes.length; i++){
+  var n0 = notes[i-1];
+  var n1 = notes[i];
 
-    stroke(n0.hue, 50, 128);
+  stroke(n0.hue, 50, 128);
 
-    line(n0.xPos, n0.yPos, n1.xPos, n1.yPos);
-  }
+  line(n0.xPos, n0.yPos, n1.xPos, n1.yPos);
+}
 
-  // Update color
-  hue = (hue + 0.1) % 255;
+// Update color
+hue = (hue + 0.1) % 255;
 }
 
 function mouseClicked(){
@@ -143,45 +147,45 @@ function mouseClicked(){
 }
 
 function createNote(duration, amplitude){
-  // Create new note
-  var f = scale[floor(random(scale.length))];
-  var n = new note(f, duration, mouseX, mouseY);
+// Create new note
+var f = scale[floor(random(scale.length))];
+var n = new note(f, duration, mouseX, mouseY);
 
-  // Initialize it
-  n.start(amplitude);
-  // Push to stack
-  notes.push(n);
+// Initialize it
+n.start(amplitude);
+// Push to stack
+notes.push(n);
 }
 
 function note(frequency, duration, x, y){
-  // Update globals
-  noteDx = lerp(noteDx, mouseX - notepX, mSmooth);
-  noteDy = lerp(noteDy, mouseY - notepY, mSmooth);
-  notepX = x;
-  notepY = y;
+// Update globals
+noteDx = lerp(noteDx, mouseX - notepX, mSmooth);
+noteDy = lerp(noteDy, mouseY - notepY, mSmooth);
+notepX = x;
+notepY = y;
 
-  // Create oscilator and envelope
-  this.env = new p5.Env(0.005, 1, 0.1, 0.7, duration / 2000, 0.3, 0.1);
-  this.osc = new p5.Oscillator(frequency, 'triangle');
-  this.osc.amp(this.env);
-  this.osc.start();
+// Create oscilator and envelope
+this.env = new p5.Env(0.005, 1, 0.1, 0.7, duration / 2000, 0.3, 0.1);
+this.osc = new p5.Oscillator(frequency, 'triangle');
+this.osc.amp(this.env);
+this.osc.start();
 
-  // Set variables
-  this.vX = constrain(mouseDx * velInherit, -velComponentMax, velComponentMax);
-  this.vY = constrain(mouseDy * velInherit, -velComponentMax, velComponentMax);
+// Set variables
+this.vX = constrain(mouseDx * velInherit, -velComponentMax, velComponentMax);
+this.vY = constrain(mouseDy * velInherit, -velComponentMax, velComponentMax);
 
-  this.xPos = x;
-  this.yPos = y;
+this.xPos = x;
+this.yPos = y;
 
-  this.duration = duration;
-  this.end = millis() + duration;
+this.duration = duration;
+this.end = millis() + duration;
 
-  this.hue = floor(hue);
+this.hue = floor(hue);
 
-  this.frequency = frequency;
-  this.scale = nodeBaseline + nodeScale * (scale[scale.length - 1] - frequency);
+this.frequency = frequency;
+this.scale = nodeBaseline + nodeScale * (scale[scale.length - 1] - frequency);
 
-  this.completed = function(){ return (millis() >= this.end); }
+this.completed = function(){ return (millis() >= this.end); }
 }
 
 note.prototype.start = function(amplitude){

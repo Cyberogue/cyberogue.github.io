@@ -181,8 +181,6 @@ function note(frequency, duration, x, y){
   this.frequency = frequency;
   this.scale = nodeBaseline + nodeScale * (scale[scale.length - 1] - frequency);
 
-  console.log(this.scale);
-
   this.completed = function(){ return (millis() >= this.end); }
 }
 

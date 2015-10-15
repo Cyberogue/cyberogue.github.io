@@ -112,9 +112,9 @@ function draw() {
     if (notes[i].completed()){
       // Delete note
       var n = notes.shift();
-      delete(n.osc);
-      delete(n.env);
-      delete(n);
+      n.stop();
+
+     delete(n);
       i--;
     }else{
       // Update note
@@ -149,7 +149,6 @@ function createNote(duration, amplitude){
 
   // Initialize it
   n.start(amplitude);
-
   // Push to stack
   notes.push(n);
 }
@@ -187,6 +186,16 @@ function note(frequency, duration, x, y){
 note.prototype.start = function(amplitude){
   this.env.mult(amplitude);
   this.env.play(this.osc);
+}
+
+note.prototype.stop = function(){
+  this.osc.stop();
+  this.osc.disconnect();
+
+  console.log("stop");
+
+  delete(this.env);
+  delete(this.osc);
 }
 
 note.prototype.update = function(){

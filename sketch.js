@@ -204,7 +204,7 @@ note.prototype.stop = function(){
 
 note.prototype.update = function(){
   var p = (this.end - millis()) / this.duration;
-  var localScale = this.scale * p;
+  var localScale = this.scale * p * 0.5;
 
   this.xPos += this.vX;
   this.yPos += this.vY;
@@ -238,5 +238,5 @@ note.prototype.update = function(){
   // Draw sphere
   colorMode(HSB);
   fill(this.hue, 50, 20 + 200 * p, sq(epsilon/255));
-  ellipse(this.xPos, this.yPos, localScale, localScale);
+  ellipse(this.xPos, this.yPos, localScale * 2, localScale * 2);
 }

@@ -228,6 +228,11 @@ note.prototype.update = function(){
 
   // Pan sound
   var pan = -1 + ((this.xPos - localScale) / (windowWidth - 2 *localScale)) * 2;
+  if (pan >= 0){
+    pan = sqrt(pan);
+  }else{
+    pan = -sqrt(-pan);
+  }
   this.osc.pan(pan);
 
   // Draw sphere

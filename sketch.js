@@ -204,27 +204,34 @@ note.prototype.stop = function(){
 
 note.prototype.update = function(){
   var p = (this.end - millis()) / this.duration;
+  var localScale = this.scale * p;
 
   this.xPos += this.vX;
   this.yPos += this.vY;
 
-  if (this.xPos < 0){ 
-    this.xPos = 0;
+  // Bounce
+  if (this.xPos < localScale){ 
+    this.xPos = localScale;
     this.vX *= -1;
-  }else if (this.xPos > windowWidth){ 
-    this.xPos = windowWidth;
+  }else if (this.xPos > windowWidth - localScale){ 
+    this.xPos = windowWidth - localScale;
     this.vX *= -1;
   }
 
-  if (this.yPos < 0){ 
-    this.yPos = 0;
+  if (this.yPos < localScale){ 
+    this.yPos = localScale;
     this.vY *= -1;
-  }else if (this.yPos > windowHeight){ 
-    this.yPos = windowHeight;
+  }else if (this.yPos > windowHeight - localScale){ 
+    this.yPos = windowHeight - localScale;
     this.vY *= -1;
   }
 
+  // Pan sound
+  var pan = -1 + ((this.xPos - localScale) / (windowWidth - 2 *localScale)) * 2;
+  this.osc.pan(pan);
+
+  // Draw sphere
   colorMode(HSB);
   fill(this.hue, 50, 20 + 200 * p, sq(epsilon/255));
-  ellipse(this.xPos, this.yPos, this.scale * p, this.scale * p);
+  ellipse(this.xPos, this.yPos, localScale, localScale);
 }

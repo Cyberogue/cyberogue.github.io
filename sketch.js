@@ -1,6 +1,6 @@
 // Constants
 var bgIdleColor = 196; // Idle background color
-var bgActiveColor = 15;
+var bgActiveColor = 60;
 
 var mouseDeadzone = 0.5;  
 var mouseMax = 40;    
@@ -58,19 +58,18 @@ function setup() {
 // Create canvas
 createCanvas(windowWidth, windowHeight);
 background(bgIdleColor);
-
-// Config
-noStroke();
-noCursor();
-
 // Create noise
 noise = new p5.Noise();
 noise.setType('pink');
 noise.amp(0);
 noise.start();
 
+// Config
 scale = [277, 311, 330, 370, 415, 440, 523, 554, 622, 660, 740, 830];
+noStroke();
+noCursor();
 
+// Init
 notepX = mouseX;
 notepY = mouseY;
 
@@ -184,6 +183,8 @@ this.hue = floor(hue);
 
 this.frequency = frequency;
 this.scale = nodeBaseline + nodeScale * (scale[scale.length - 1] - frequency);
+
+console.log(this.scale);
 
 this.completed = function(){ return (millis() >= this.end); }
 }

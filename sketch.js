@@ -10,7 +10,7 @@ var mSmooth = .5;   // Mouse smoothing
 var smoothHigh = .95; // Smoothing factor low-high
 var smoothLow = .99;  // Smoothing factor high-low
 
-var noiseAmp = 0.75;  // Noise amplitude
+var noiseAmp = 0.9;  // Noise amplitude
 var toneAmp = 1;      // Tone amplitude
 
 var velComponentMax = 30;
@@ -20,7 +20,7 @@ var nodeBaseline = 100; // Lowest radius of a node
 var nodeScale = 0.5;   // Scale factor of a node's size
 
 var keyRange = 1;     // Local range of notes
-var chordPercent = .5;  // Percentage of notes to play as chords
+var chordPercent = .75;  // Highest percentage of notes to play as chords
 
 var bpm = 120;        // Beats to play per minute
 // C# harmonic minor
@@ -75,6 +75,8 @@ chord = [0, 2, 4];    // Shape of a chord
 
 noStroke();
 cursor(HAND);
+textSize(14);
+textFont('Helvetica');
 
 strokeWeight(3);
 
@@ -87,7 +89,14 @@ hue = random(255);
 
 function draw() {
 // Clear background
-background(lerp(bgIdleColor, bgActiveColor, 1.5 * sq(epsilon / 255)));
+background(lerp(bgIdleColor, bgActiveColor, 1.5 * sq(epsilon / 256)));
+
+// Reset color mode
+colorMode(HSB);
+
+// Draw text on top
+fill(0, 0, 255, 1 - sq(epsilon/256));
+text("Alice Quiros", windowWidth - 100, windowHeight - 20);
 
 mouseDx = lerp(mouseDx, mouseX - pmouseX, mSmooth);
 mouseDy = lerp(mouseDy, mouseY - pmouseY, mSmooth);
@@ -113,7 +122,7 @@ var note = 2 * beat / pow(2, n);
 mNext = millis() + note;
 
 // Create note
-if (random(1) < chordPercent){
+if (random() * n < chordPercent){
   createChord(note * 4, 1 - sq(1 - epsilon/255));
 }else{
 createNote(note * 4, 1 - sq(1 - epsilon/255));
@@ -139,7 +148,6 @@ notes[i].update();
 }
 
 // Draw line between remaining nodes
-colorMode(HSB);
 for (var i = 1; i < notes.length; i++){
   var n0 = notes[i-1];
   var n1 = notes[i];

@@ -168,6 +168,7 @@ for (var i = 0; i < chord.length; i++){
   // Cerate new note
   var n = new note(f, duration, mouseX, mouseY);
   // Initialize it
+  n.hue = (n.hue + 64 - random(128)) % 255;
   n.start(amplitude);
   // Push to stack
   notes.push(n);
@@ -212,7 +213,7 @@ this.end = millis() + duration;
 this.hue = floor(hue);
 
 this.frequency = frequency;
-this.scale = nodeBaseline + nodeScale * (scale[scale.length - 1] - frequency);low-high
+this.scale = nodeBaseline + nodeScale * (scale[scale.length - 1] - frequency);
 
 this.completed = function(){ return (millis() >= this.end); }
 }

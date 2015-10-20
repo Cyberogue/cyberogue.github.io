@@ -1,4 +1,9 @@
+// ------------------------------
 // Constants
+//
+// These are variables used throughout the program, placed here for easy access
+// ------------------------------
+
 var bgIdleColor = 196; // Idle background color
 var bgActiveColor = 60;
 
@@ -20,7 +25,8 @@ var nodeBaseline = 100; // Lowest radius of a node
 var nodeScale = 0.5;   // Scale factor of a node's size
 
 var keyRange = 1;     // Local range of notes
-var chordPercent = .75;  // Highest percentage of notes to play as chords
+var chordPercent = .75;  
+var chordHueOffset = 128;
 
 var bpm = 120;        // Beats to play per minute
 // C# harmonic minor
@@ -44,6 +50,17 @@ var noteDy = 0;
 
 var mouseDx = 0;
 var mouseDy = 0;
+
+/* IMPORTANT!!!!!!!!! */
+
+/*
+* Epsilon is one of the most important variables in this program. It is an abstract variable created by smoothing out mouse movement by differnet amounts.
+* When Epsilon is 255, mouse movement is at its highest and when it's at 0 mouse movement is at its lowest. This is used to adjust basically everything
+* in the sketch
+*
+* Throughout the sketch functions involving epsilon will appear. These functions turn epsilon from a linear variable into a curve and can be mostly ignored. 
+* In addition, some of them invert epsilon. The curve-like aspect is more pleasing to the eye and ears than a linear variable.
+*/
 var epsilon = 0; 
 
 // Note timing
@@ -55,7 +72,9 @@ var notes = [];
 // Color
 var hue;
 
-
+/* 
+* Setup method called once by P5JS at the start, used to initialize all sorts of different things
+*/
 function setup() {
 // Create canvas
 createCanvas(windowWidth, windowHeight);
@@ -68,25 +87,30 @@ noise.start();
 
 // Config
 
+// Load scales and chords in
 //       C#4  D#4  E4   F#4  G#4  A4   C5   C#5  D#5  E5   F#5  G#5  A5
 //        0    1    2    3    4    5    6    7    8    9    10   11   12
 scale = [277, 311, 330, 370, 415, 440, 523, 554, 622, 660, 740, 830, 880];
-chord = [0, 2, 4];    // Shape of a chord
+chord = [0, 2, 4];    // Shape of a chord, 0 is the root node
 
+// Set up constants
 noStroke();
 cursor(HAND);
 textSize(14);
 textFont('Helvetica');
-
 strokeWeight(3);
 
-// Init
+// Initialize other variables
 notepX = mouseX;
 notepY = mouseY;
-
 hue = random(255);
 }
 
+/* 
+* Draw method called repeatedly by P5JS. Inside this method every single active note is updated.
+* In addition, mouse velocity is calculated and epsilon is updated, and if we can play a new note
+* we do so then delay the note timer by some amount
+*/
 function draw() {
 // Clear background
 background(lerp(bgIdleColor, bgActiveColor, 1.5 * sq(epsilon / 256)));
@@ -125,7 +149,7 @@ mNext = millis() + note;
 if (random() * n < chordPercent){
   createChord(note * 4, 1 - sq(1 - epsilon/255));
 }else{
-createNote(note * 4, 1 - sq(1 - epsilon/255));
+  createNote(note * 4, 1 - sq(1 - epsilon/255));
 }
 }
 
@@ -151,9 +175,9 @@ notes[i].update();
 for (var i = 1; i < notes.length; i++){
   var n0 = notes[i-1];
   var n1 = notes[i];
-
+  
   stroke(n0.hue, 50, 128, sq(epsilon/255));
-
+  
   line(n0.xPos, n0.yPos, n1.xPos, n1.yPos);
 }
 
@@ -171,15 +195,15 @@ var root = floor(random(scale.length - chord[chord.length - 1]));
 
 // Create the chord from the root
 for (var i = 0; i < chord.length; i++){
-  // Find frequency
-  var f = scale[root + chord[i]];
-  // Cerate new note
-  var n = new note(f, duration, mouseX, mouseY);
-  // Initialize it
-  n.hue = (n.hue + 64 - random(128)) % 255;
-  n.start(amplitude);
-  // Push to stack
-  notes.push(n);
+// Find frequency
+var f = scale[root + chord[i]];
+// Cerate new note
+var n = new note(f, duration, mouseX, mouseY);
+// Initialize it
+n.hue = (n.hue + (chordHueOffset/2) - random(chordHueOffset)) % 255;
+n.start(amplitude);
+// Push to stack
+notes.push(n);
 }
 
 }
@@ -236,7 +260,7 @@ note.prototype.start = function(amplitude){
 note.prototype.stop = function(){
   this.osc.stop();
   this.osc.disconnect();
-
+  
   delete(this.env);
   delete(this.osc);
 }
@@ -245,10 +269,10 @@ note.prototype.stop = function(){
 note.prototype.update = function(){
   var p = (this.end - millis()) / this.duration;
   var localScale = this.scale * p * 0.5;
-
+  
   this.xPos += this.vX;
   this.yPos += this.vY;
-
+  
 // Bounce
 if (this.xPos < localScale){ 
   this.xPos = localScale;

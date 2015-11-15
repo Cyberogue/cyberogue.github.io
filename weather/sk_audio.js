@@ -1,9 +1,14 @@
 var audiolib = {};
 
 function audioLoad() {
-	audiolib.sun = [];
-	audiolib.sun[0] = loadSound('audio/sun1.mp3');
-	audiolib.sun[1] = loadSound('audio/sun2.mp3');
+	var host = getURL();
+	host = host.substring(0, host.lastIndexOf('/')) + "/audio/";
+	console.log(host);
+
+	audiolib.sun = [
+		loadSound(host + 'sun1.mp3'),
+		loadSound(host + 'sun2.mp3')
+	];
 }
 
 function audioInit() {

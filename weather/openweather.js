@@ -7,7 +7,8 @@ OpenWeatherMap = function(apikey) {
 		var data = JSON.parse(this.responseText);
 		if (!data.message) {
 			OpenWeatherMap.data = data;
-			if (OpenWeatherMap.debug) console.log(data);
+			OpenWeatherMap.data.time = millis(); // When it was received
+			if (OpenWeatherMap.debug) console.log("Received: " + round(OpenWeatherMap.data.time));
 		} else if (OpenWeatherMap.debug) console.log(data.message);
 	}
 }
@@ -23,28 +24,6 @@ OpenWeatherMap.prototype.request = function(query, countrycode) {
 	this.ready = false;
 	this.xml.open("GET", call, true);
 	this.xml.send();
-}
 
-OpenWeatherMap.prototype.read = function() {
-	var container = {};
-
-	container.clouds = OpenWeatherMap.data.clouds.all;
-
-	container.name = OpenWeatherMap.data.name;
-	container.humidity = OpenWeatherMap.data.main.humidity;
-	container.pressure = OpenWeatherMap.data.main.pressure;
-	container.temp = OpenWeatherMap.data.main.temp;
-
-	container.main = OpenWeatherMap.data.weather[0].main;
-	container.description = OpenWeatherMap.data.weather[0].description;
-	container.icon = OpenWeatherMap.data.weather[0].icon;
-	container.id = OpenWeatherMap.data.weather[0].id;
-
-	if (OpenWeatherMap.data.rain) {
-		container.rain = OpenWeatherMap.data.rain["3h"];
-	} else {
-		container.rain = 0;
-	}
-
-	return container;
+	if (OpenWeatherMap.debug) console.log("Request '" + query + "': " + round(millis()));
 }

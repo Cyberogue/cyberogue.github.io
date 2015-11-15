@@ -3,11 +3,10 @@ var tempMin = 0;
 var tempMax = 100;
 
 /* ###### ADVANCED #### */
-var updateRate = 1; // Times per second
-var refreshRate = 30; // Delay = refreshRate / updateRate
+var updateRate = 20; // Seconds
 
 /* ###### GLOBALS ##### */
-var weather;
+var api;
 var query;
 
 var queryField;
@@ -16,6 +15,7 @@ var queryDisplay;
 var descDisplay;
 var showQuery = false;
 
+var lastReceived = 0;
 var nextUpdate = 0;
 var refreshTimer = 0;
 
@@ -58,36 +58,48 @@ function setup() {
 	descDisplay.position(0, windowHeight / 2 + 100);
 
 	// Open API
-	weather = new OpenWeatherMap("eb7c74d1367f20a87ddff4cdbfd9aab0");
+	api = new OpenWeatherMap("eb7c74d1367f20a87ddff4cdbfd9aab0");
 	//OpenWeatherMap.debug = true;
 	// Go!
 	query = 'New York City';
-	refresh();
 
 	audioInit();
 }
 
 /* ####### RUNTIME ###### */
 
-function update() {
-	var data;
-
-	if (OpenWeatherMap.data) data = weather.read();
-
-	if (data) {
-		queryDisplay.html(data.name);
-		descDisplay.html(data.description);
-		audioConfig(data);
-	} else {
-		queryDisplay.html('');
-		descDisplay.html('');
-	}
+function apiRequest() {
+	api.request(query);
+	refreshTimer = 0;
 }
 
-function refresh() {
-	console.log("Pull from " + query);
-	weather.request(query);
-	refreshTimer = 0;
+function apiReceive() {
+	// Create object to pass
+	var container = {};
+
+	container.clouds = OpenWeatherMap.data.clouds.all;
+
+	container.name = OpenWeatherMap.data.name;
+	container.humidity = OpenWeatherMap.data.main.humidity;
+	container.pressure = OpenWeatherMap.data.main.pressure;
+	container.temp = OpenWeatherMap.data.main.temp;
+
+	container.main = OpenWeatherMap.data.weather[0].main;
+	container.description = OpenWeatherMap.data.weather[0].description;
+	container.icon = OpenWeatherMap.data.weather[0].icon;
+	container.id = OpenWeatherMap.data.weather[0].id;
+
+	container.receiveTime = OpenWeatherMap.data.time;
+
+	if (OpenWeatherMap.data.rain) container.rain = OpenWeatherMap.data.rain["3h"];
+	else container.rain = 0;
+
+	// Update text and description
+	queryDisplay.html(container.name);
+	descDisplay.html(container.description);
+
+	// Update audio
+	audioRefresh(container);
 }
 
 /* ####### GUI ######### */
@@ -95,7 +107,8 @@ function refresh() {
 function forceRefresh() {
 	query = queryField.value();
 	setQuery(false);
-	refresh();
+	nextUpdate = millis() + 1000 * updateRate;
+	apiRequest();
 }
 
 function setQuery(show) {
@@ -115,12 +128,19 @@ function toggleQuery() {
 
 /* ####### ENGINE ###### */
 
+function preload() {
+	audioLoad();
+}
+
 function draw() {
 	if (millis() >= nextUpdate) {
-		nextUpdate = millis() + 1000 / updateRate;
-		update();
+		nextUpdate = millis() + 1000 * updateRate;
+		apiRequest();
+	}
 
-		if (++refreshTimer >= refreshRate) refresh();
+	if (OpenWeatherMap.data && (!lastReceived || lastReceived < OpenWeatherMap.data.time)) {
+		lastReceived = OpenWeatherMap.data.time;
+		apiReceive();
 	}
 
 	audioUpdate();

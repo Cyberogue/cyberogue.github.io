@@ -1,6 +1,7 @@
 var audiolib = {};
 
 function audioLoad() {
+	audiolib.sun = [];
 	audiolib.sun[0] = loadSound('audio/sun1.mp3');
 	audiolib.sun[1] = loadSound('audio/sun2.mp3');
 }

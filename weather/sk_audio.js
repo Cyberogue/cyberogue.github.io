@@ -51,7 +51,6 @@ function audioInit() {
 
 function audioRefresh(data) {
 	colorRefresh(data);
-	console.log(data);
 }
 
 function colorRefresh(data) {

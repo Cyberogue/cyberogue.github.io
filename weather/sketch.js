@@ -13,6 +13,7 @@ var queryField;
 var toggleButton;
 var queryDisplay;
 var descDisplay;
+var cycleStates = true;
 var showQuery = false;
 
 var lastReceived = 0;
@@ -63,11 +64,12 @@ function setup() {
 	api = new OpenWeatherMap("eb7c74d1367f20a87ddff4cdbfd9aab0");
 	//OpenWeatherMap.debug = true;
 
-	// Check if we have a search query
+	// Extract parameters
 	var param = getURL();
-	var ind1 = param.indexOf("query=");
-	if (ind1 > 0) {
-		query = param.substring(ind1 + 6, param.length);
+	var ind_q = param.indexOf("query=") + 6;
+	if (ind_q > 6) {
+		cycleStates = false;
+		query = param.substring(ind_q, param.length);
 		stateCapitalTimer = 6;
 	}
 
@@ -154,7 +156,7 @@ function draw() {
 	if (millis() >= nextUpdate) {
 		nextUpdate = millis() + 1000 * updateRate;
 
-		if (--stateCapitalTimer <= 0) {
+		if (cycleStates && --stateCapitalTimer <= 0) {
 			stateCapitalTimer = 6;
 			query = stateCapitals[floor(random() * stateCapitals.length)];
 		}

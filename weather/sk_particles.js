@@ -11,6 +11,8 @@ function particleUpdate() {
 }
 
 function particleRefresh(data) {
+	console.log(data);
+
 	colorMode(RGB);
 	particles = [];
 	if (data.main == 'Rain' || data.main == 'Snow') {
@@ -20,8 +22,6 @@ function particleRefresh(data) {
 
 		var v = 2;
 		if (data.main == 'Snow') v *= .25;
-
-		console.log(c);
 
 		for (var i = 0; i < 5 * amt; i++) {
 			var vX = (1 - random(2)) * amt;

@@ -17,9 +17,7 @@ OpenWeatherMap.prototype.debug = false;
 OpenWeatherMap.prototype.data = undefined;
 
 OpenWeatherMap.prototype.request = function(query, countrycode) {
-	if (!countrycode) countrycode = 'us';
-
-	var call = 'http://api.openweathermap.org/data/2.5/weather?q=' + query.replace(" ", "%20") + ',' + countrycode + '&appid=' + this.key + "&units=metric";
+	var call = 'http://api.openweathermap.org/data/2.5/weather?q=' + query.replace(" ", "%20") + (countrycode? countrycode:'') + '&appid=' + this.key + "&units=metric";
 
 	this.ready = false;
 	this.xml.open("GET", call, true);

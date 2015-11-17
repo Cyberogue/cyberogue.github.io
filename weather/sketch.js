@@ -62,10 +62,17 @@ function setup() {
 	// Open API
 	api = new OpenWeatherMap("eb7c74d1367f20a87ddff4cdbfd9aab0");
 	//OpenWeatherMap.debug = true;
-	// Go!
-	query = 'New York City';
+
+	// Check if we have a search query
+	var param = getURL();
+	var ind1 = param.indexOf("query=");
+	if (ind1 > 0) {
+		query = param.substring(ind1 + 6, param.length);
+		stateCapitalTimer = 6;
+	}
 
 	audioInit();
+	particleInit();
 }
 
 /* ####### RUNTIME ###### */
@@ -109,6 +116,7 @@ function apiReceive() {
 
 	// Update audio
 	audioRefresh(container);
+	particleRefresh(container);
 }
 
 /* ####### GUI ######### */
@@ -119,8 +127,6 @@ function forceRefresh() {
 	nextUpdate = millis() + 1000 * updateRate;
 	stateCapitalTimer = 6;
 	apiRequest();
-
-	console.log
 }
 
 function setQuery(show) {
@@ -162,4 +168,5 @@ function draw() {
 	}
 
 	audioUpdate();
+	particleUpdate();
 }

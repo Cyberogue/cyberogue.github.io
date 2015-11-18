@@ -46,7 +46,7 @@ function audioInit() {
 		"50n": "#565c62",
 	};
 
-	bgcolor = new bgColorManager(color(0, 0, 20), transTime / 60);
+	bgcolor = new bgColorManager(color(0, 0, 20), transTime);
 }
 
 function audioRefresh(data) {
@@ -68,7 +68,7 @@ function colorRefresh(data) {
 	// Adjust for temperature
 	var tempAdj = map(data.temp, tempScaleMin, tempScaleMax, 0, 1);
 	tempAdj = constrain(tempAdj, 0, 1)
-	b = constrain(b * tempAdj, 20, 255);
+	b = constrain(b * tempAdj, 20, 240);
 
 	if (b * s / 10000 > .8) {
 		queryDisplay.style('color', 'black');
@@ -96,7 +96,7 @@ function bgColorManager(color, t) {
 
 	this.update = function() {
 		if (this.index <= 1 && this.current != this.target) {
-			this.index += this.speed
+			this.index += this.speed * deltaTime
 			colorMode(RGB);
 			this.current = lerpColor(this.previous, this.target, this.index);
 		}

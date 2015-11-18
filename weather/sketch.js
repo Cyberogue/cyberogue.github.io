@@ -22,11 +22,17 @@ var refreshTimer = 0;
 
 var stateCapitalTimer = 0; // Updates
 
+var tPrevious = 0;
+var deltaTime;
+var windowDensity;
+
 /* ###### SETUP ######## */
 
 function setup() {
 	createCanvas(windowWidth, windowHeight);
 	background(20)
+
+	windowDensity = (windowWidth * windowHeight) / (1920 * 1080);
 
 	// Create query box
 	queryField = createInput('Search...');
@@ -153,8 +159,14 @@ function preload() {
 }
 
 function draw() {
-	if (millis() >= nextUpdate) {
-		nextUpdate = millis() + 1000 * updateRate;
+	// Calculate deltaTime
+	var tNow = millis();
+	deltaTime = (tNow - tPrevious) / 1000;
+	tPrevious = tNow;
+
+	// Rest of the stuff
+	if (tNow >= nextUpdate) {
+		nextUpdate = tNow + 1000 * updateRate;
 
 		if (cycleStates && --stateCapitalTimer <= 0) {
 			stateCapitalTimer = 6;

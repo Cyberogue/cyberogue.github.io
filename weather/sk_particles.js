@@ -1,6 +1,6 @@
 var particles = [];
 var snowColor = 'rgba(255,255,255,.9)';
-var rainColor = 'rgba(0,51,102,.3)';
+var rainColor = 'rgba(0,51,102,.5)';
 
 function particleInit() {}
 
@@ -23,7 +23,7 @@ function particleRefresh(data) {
 		var v = 2;
 		if (data.main == 'Snow') v *= .25;
 
-		for (var i = 0; i < 5 * amt; i++) {
+		for (var i = 0; i < 5 * amt * windowDensity; i++) {
 			var vX = (1 - random(2)) * amt;
 			var vY = v * (300 + random(35 * amt));
 
@@ -37,15 +37,15 @@ function particleRefresh(data) {
 function fallingParticle(vX, vY, width, height, color) {
 	this.x = random(windowWidth);
 	this.y = random(windowHeight);
-	this.vX = vX / 60;
-	this.vY = vY / 60;
+	this.vX = vX;
+	this.vY = vY;
 	this.width = width;
 	this.height = height;
 	this.fill = color;
 
 	this.draw = function() {
-		this.x += this.vX;
-		this.y += this.vY;
+		this.x += this.vX * deltaTime;
+		this.y += this.vY * deltaTime;
 
 		if (this.x < 0 || this.x > windowWidth) this.x = random(windowWidth);
 

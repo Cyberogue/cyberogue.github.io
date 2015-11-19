@@ -7,22 +7,26 @@ var sFreq = 2000;
 
 var hueRate = 180;
 
+var mode = 0;
+
 /* ###### ADVANCED ##### */
 var debug = true;
 var debugClr = true;
 
-var mSmooth = .3;
+var mSmooth = 1;
 
 /* ###### GLOBALS ###### */
 var pdY, pdX, dY, dX, aX, aY, dT, m;
 var hue = 0;
 var reader;
 
+var pause = false;
+
 /* ##### MAIN CODE ##### */
 
 function onDraw() { // Called 60 times a second
 	colorMode(RGB);
-	stroke(0, 0, 0, 0);
+	noStroke();
 	fill(0, 0, 0, 127 * dT);
 	rect(0, 0, windowWidth, windowHeight);
 
@@ -34,11 +38,6 @@ function onDraw() { // Called 60 times a second
 
 function drawChunk(count) {
 	// Clamp count to be safe
-	if (count > 1000) count = 1000;
-	else if (count < 1) count = 1;
-
-	if (sq(dX) + sq(dY) <= 0.01) return;
-
 	console.log("Draw " + count);
 
 	// Continue
@@ -51,27 +50,51 @@ function drawChunk(count) {
 		var lcos = sin(l * PI / 2);
 		var tsim = mStart + (i / count * dT * 1000);
 
-		var a = base + amp / 4 * (1 + cos((tsim % period) / period * TWO_PI));
+		var a = base + amp / 4 * (1 + envelope((tsim % period) / period * TWO_PI));
 
 		var dir = new Vector2(lerp(pdX, dX, lcos), lerp(pdY, dY, lcos));
 		dir.normalize();
 
 		var center = new Vector2(lerp(pmouseX, mouseX, l), lerp(pmouseY, mouseY, l));
+		center.x += aX * dT;
+		center.y += aY * dT;
 
 		n1[i] = new Vector2(center.x + a * dir.y, center.y - a * dir.x);
 		n2[i] = new Vector2(center.x - a * dir.y, center.y + a * dir.x);
 	}
 
-	colorMode(HSB);
-	var c1 = color(hue, 200, 127);
-	var c2 = color((hue + hueRate * dT) % 360, 200, 127);
-
+	//colorMode(HSB);
+	//fill(hue, 200, 127);
 	// Draw quads
 	for (var i = 1; i <= count; i++) {
-		var c = lerpColor(c1, c2, (i - 1) / (count - 1));
-
-		fill(c, 200, 127);
 		quad(n1[i - 1].x, n1[i - 1].y, n2[i - 1].x, n2[i - 1].y, n2[i].x, n2[i].y, n1[i].x, n1[i].y);
+	}
+}
+
+function envelope(t) { // t goes from 0 to TWO_PI
+	switch (mode) {
+		case 0: // sine
+		default:
+			return cos(t);
+			break;
+		case 1: // Tan
+			return tan(t) / 2; // Prevent infinite
+			break;
+		case 2: // square
+			return t <= PI ? 1 : -1;
+			break;
+		case 3: // triangle
+			return t <= PI ? -1 + t / HALF_PI : 1 - (t - PI) / HALF_PI;
+			break;
+		case 4: // saw
+			return -1 + t / PI;
+			break;
+		case 5: // invsaw
+			return 1 - t / PI;
+			break;
+		case 6: // random
+			return random(-1, 1);
+			break;
 	}
 }
 
@@ -90,6 +113,9 @@ function setup() {
 	hue = 0;
 	m = millis();
 
+	__x = mouseX;
+	__y = mouseY;
+
 	colorMode(HSB);
 
 	angleMode(RADIANS);
@@ -104,6 +130,9 @@ function draw() {
 	if (debugClr) console.clear();
 
 	updateGlobals();
+
+	if (keyIsDown(SHIFT)) return;
+
 	onDraw();
 
 	// Calculate rays to draw
@@ -111,24 +140,32 @@ function draw() {
 	var _cts = floor(_ts * sFreq);
 	_ts -= _cts / sFreq;
 
-	if (abs(dX) > 1 || abs(dY) > 1) {
-		drawChunk(_cts);
-	}
+	_cts = constrain(_cts, 0, 1000);
+
+	if (sq(dX) + sq(dY) >= dT * dT) drawChunk(_cts);
 
 	ct += _cts;
 
 	if (debug) onDebug();
 }
 
+
+var __x, __y;
+
 function updateGlobals() {
 	pdY = dY;
-	pdX = dX;
-	dY = (1 - mSmooth) * (mouseY - pmouseY) + mSmooth * dY;
-	dX = (1 - mSmooth) * (mouseX - pmouseX) + mSmooth * dX;
 	dT = (millis() - m) / 1000;
+	pdX = dX;
+
+	var __ms = mSmooth * dT;
+	dY = (1 - __ms) * (mouseY - __y) + __ms * dY;
+	dX = (1 - __ms) * (mouseX - __x) + __ms * dX;
 	aX = dX - pdX;
 	aY = dY - pdY;
 	m = millis();
+
+	__x = mouseX;
+	__y = mouseY;
 
 	hue = (hue + hueRate * dT) % 360;
 }
@@ -154,8 +191,10 @@ function Vector2(x, y) {
 
 /* ####### DOM ######### */
 
-var periodLabel, ampLabel, baseLabel, sampleLabel;
+var periodLabel, ampLabel, baseLabel, sampleLabel, pauseLabel;
 var periodSlider, ampSlider, baseSlider, sampleSlider;
+var clearButton, saveButton;
+var modeSelect;
 var fpAdj = 300;
 
 function createDom() {
@@ -207,6 +246,43 @@ function createDom() {
 	sampleLabel.style('font-family', 'sans-serif');
 	sampleLabel.style('color', 'silver');
 
+	pauseLabel = createSpan('Hold [SHIFT] to pause');
+	pauseLabel.position(25, 155);
+	pauseLabel.style('font-size', 12);
+	pauseLabel.style('font-family', 'sans-serif');
+	pauseLabel.style('color', 'grey');
+
+	clearButton = createButton('Clear');
+	clearButton.position(25, 125);
+	clearButton.style('width', '40px');
+	clearButton.style('height', '20px');
+	clearButton.style('background', '#222');
+	clearButton.style('color', 'silver');
+	clearButton.mouseClicked(clearCanvas);
+
+	saveButton = createButton('Save');
+	saveButton.position(65, 125);
+	saveButton.style('width', '40px');
+	saveButton.style('height', '20px');
+	saveButton.style('background', '#666');
+	saveButton.style('color', 'silver');
+	saveButton.mouseClicked(saveImage);
+
+	modeSelect = createSelect();
+	modeSelect.position(105, 125);
+	modeSelect.option('Sine');
+	modeSelect.option('Tan');
+	modeSelect.option('Square');
+	modeSelect.option('Triangle');
+	modeSelect.option('Saw');
+	modeSelect.option('InvSaw');
+	modeSelect.option('Random');
+	modeSelect.style('width', '70px');
+	modeSelect.style('height', '20px');
+	modeSelect.style('background', '#666');
+	modeSelect.style('color', 'silver');
+	modeSelect.changed(refreshVars);
+
 	refreshVars();
 }
 
@@ -220,6 +296,39 @@ function refreshVars() {
 	ampLabel.html('A: ' + round(amp));
 	baseLabel.html('B: ' + round(base));
 	sampleLabel.html('Fs: ' + round(sFreq));
+
+	switch (modeSelect.value().toLowerCase()) {
+		case 'sine':
+		default:
+			mode = 0;
+			break;
+		case 'tan':
+			mode = 1
+			break;
+		case 'square':
+			mode = 2;
+			break;
+		case 'triangle':
+			mode = 3;
+			break;
+		case 'saw':
+			mode = 4;
+			break;
+		case 'invsaw':
+			mode = 5;
+			break;
+		case 'random':
+			mode = 6;
+			break;
+	}
+}
+
+function clearCanvas() {
+	background(10);
+}
+
+function saveImage() {
+	saveImage('waveform_drawing', 'png');
 }
 
 /* ####### DEBUG ####### */

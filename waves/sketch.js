@@ -33,10 +33,10 @@ function onDraw() { // Called 60 times a second
 }
 
 function drawChunk(count) {
-	console.log("Draw " + count);
-
 	// Check if we should draw
-	if ((dX * dX + dY * dY) == 0) return;
+	if ((dX * dX + dY * dY) <= .1) return;
+
+	console.log("Draw " + count);
 
 	// Continue
 	var n1 = new Array(count);
@@ -45,7 +45,7 @@ function drawChunk(count) {
 	var mStart = m - dT * 1000;
 	for (var i = 0; i <= count; i++) {
 		var l = i / (count - 1);
-		var lcos = sin(l * PI/2);
+		var lcos = sin(l * PI / 2);
 		var tsim = mStart + (i / count * dT * 1000);
 
 		var a = base + amp / 4 * (1 + cos(tsim % period * PI / 180));
@@ -108,7 +108,7 @@ function draw() {
 	if (abs(dX) > 1 || abs(dY) > 1) {
 		drawChunk(_cts);
 	}
-	
+
 	ct += _cts;
 
 	if (debug) onDebug();

@@ -55,9 +55,12 @@ function drawChunk(count) {
 		var dir = new Vector2(lerp(pdX, dX, lcos), lerp(pdY, dY, lcos));
 		dir.normalize();
 
-		var center = new Vector2(lerp(pmouseX, mouseX, l), lerp(pmouseY, mouseY, l));
-		center.x += aX * dT;
-		center.y += aY * dT;
+
+		var lsq =  .5 * sq(l - .5);
+		var x = lerp(pmouseX, mouseX, l) + aX * lsq;
+		var y = lerp(pmouseY, mouseY, l) + aY * lsq;
+
+		var center = new Vector2(x, y);
 
 		n1[i] = new Vector2(center.x + a * dir.y, center.y - a * dir.x);
 		n2[i] = new Vector2(center.x - a * dir.y, center.y + a * dir.x);

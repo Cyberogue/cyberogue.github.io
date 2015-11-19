@@ -56,7 +56,7 @@ function drawChunk(count) {
 		dir.normalize();
 
 
-		var lsq =  .5 * sq(l - .5);
+		var lsq = .5 * sq(l - .5);
 		var x = lerp(pmouseX, mouseX, l) + aX * lsq;
 		var y = lerp(pmouseY, mouseY, l) + aY * lsq;
 
@@ -269,7 +269,7 @@ function createDom() {
 	saveButton.style('height', '20px');
 	saveButton.style('background', '#666');
 	saveButton.style('color', 'silver');
-	saveButton.mouseClicked(saveImage);
+	saveButton.mouseClicked(saveCanvas);
 
 	modeSelect = createSelect();
 	modeSelect.position(105, 125);
@@ -328,10 +328,6 @@ function refreshVars() {
 
 function clearCanvas() {
 	background(10);
-}
-
-function saveImage() {
-	saveImage('waveform_drawing', 'png');
 }
 
 /* ####### DEBUG ####### */

@@ -269,7 +269,7 @@ function createDom() {
 	saveButton.style('height', '20px');
 	saveButton.style('background', '#666');
 	saveButton.style('color', 'silver');
-	saveButton.mouseClicked(saveCanvas);
+	saveButton.mouseClicked(saveImage);
 
 	modeSelect = createSelect();
 	modeSelect.position(105, 125);
@@ -328,6 +328,12 @@ function refreshVars() {
 
 function clearCanvas() {
 	background(10);
+}
+
+function saveImage() {
+	var filename = 'wavepic-' + month() + day() + hour() + minute() + second();
+	console.log("Saving... ");
+	saveCanvas(filename);
 }
 
 /* ####### DEBUG ####### */

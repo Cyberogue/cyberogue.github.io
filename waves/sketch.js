@@ -3,7 +3,7 @@ var period = 1000;
 var amp = 250;
 var base = 10;
 
-var sFreq = 1000;
+var sFreq = 2500;
 
 var hueRate = 180;
 
@@ -12,8 +12,6 @@ var debug = true;
 var debugClr = true;
 
 var mSmooth = .3;
-
-var threshold = 1;
 
 /* ###### GLOBALS ###### */
 var pdY, pdX, dY, dX, aX, aY, dT, m;
@@ -34,21 +32,11 @@ function onDraw() { // Called 60 times a second
 	//fill(hue, 200, 127);
 }
 
-function rayDraw(x, y, t, l) { // Called sFreq times a second
-	var a = base + amp / 4 * (1 + cos((t % period) * PI / 180));
-	var ray = new Vector2(dX, dY);
-	ray.x *= -1;
-	ray.normalize();
-
-	line(x + ray.y * a, y + ray.x * a, x - ray.y * a, y - ray.x * a);
-}
-
 function drawChunk(count) {
 	console.log("Draw " + count);
 
 	// Check if we should draw
-	if ((dX * dX + dY * dY) * dT < threshold * threshold)
-		return;
+	if ((dX * dX + dY * dY) == 0) return;
 
 	// Continue
 	var n1 = new Array(count);
@@ -120,19 +108,7 @@ function draw() {
 	if (abs(dX) > 1 || abs(dY) > 1) {
 		drawChunk(_cts);
 	}
-
-	// Draw rays
-	/*
-	if (abs(dX) > 1 || abs(dY) > 1){
-		if (debug) console.log("Render " + _cts);
-		for (var i = 0; i < _cts; i++){
-			var _t = i / (_cts-1);
-			rayDraw(lerp(pmouseX, mouseX, _t), lerp(pmouseY, mouseY, _t), m - ((1 - i / _cts) * dT * 1000), _t);
-		}
-	}else if (debug){
-		console.log("Render None");
-	}*/
-
+	
 	ct += _cts;
 
 	if (debug) onDebug();

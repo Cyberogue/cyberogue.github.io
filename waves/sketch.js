@@ -3,7 +3,7 @@ var period = 1000;
 var amp = 250;
 var base = 10;
 
-var sFreq = 2500;
+var sFreq = 2000;
 
 var hueRate = 180;
 
@@ -33,8 +33,11 @@ function onDraw() { // Called 60 times a second
 }
 
 function drawChunk(count) {
-	// Check if we should draw
-	if ((dX * dX + dY * dY) <= .1) return;
+	// Clamp count to be safe
+	if (count > 1000) count = 1000;
+	else if (count < 1) count = 1;
+
+	if (sq(dX) + sq(dY) <= 0.01) return;
 
 	console.log("Draw " + count);
 
@@ -48,7 +51,7 @@ function drawChunk(count) {
 		var lcos = sin(l * PI / 2);
 		var tsim = mStart + (i / count * dT * 1000);
 
-		var a = base + amp / 4 * (1 + cos(tsim % period * PI / 180));
+		var a = base + amp / 4 * (1 + cos((tsim % period) / period * TWO_PI));
 
 		var dir = new Vector2(lerp(pdX, dX, lcos), lerp(pdY, dY, lcos));
 		dir.normalize();
@@ -65,7 +68,8 @@ function drawChunk(count) {
 
 	// Draw quads
 	for (var i = 1; i <= count; i++) {
-		var c = lerpColor(c1, c2, i / (count - 1));
+		var c = lerpColor(c1, c2, (i - 1) / (count - 1));
+
 		fill(c, 200, 127);
 		quad(n1[i - 1].x, n1[i - 1].y, n2[i - 1].x, n2[i - 1].y, n2[i].x, n2[i].y, n1[i].x, n1[i].y);
 	}
@@ -77,6 +81,8 @@ function setup() {
 	// Create window
 	createCanvas(windowWidth, windowHeight);
 	background(20);
+
+	createDom();
 
 	dY = 0;
 	dX = 0;
@@ -146,8 +152,79 @@ function Vector2(x, y) {
 	}
 }
 
+/* ####### DOM ######### */
+
+var periodLabel, ampLabel, baseLabel, sampleLabel;
+var periodSlider, ampSlider, baseSlider, sampleSlider;
+var fpAdj = 300;
+
+function createDom() {
+	var sliderWidth;
+	if (windowWidth * .075 < 100) sliderWidth = '100px';
+	else sliderWidth = '7.5%';
+
+	periodSlider = createSlider(fpAdj * log(10), fpAdj * log(10000), fpAdj * log(1000));
+	periodSlider.position(75, 25);
+	periodSlider.style('width', sliderWidth);
+	periodSlider.changed(refreshVars);
+
+	ampSlider = createSlider(0, 400, 250);
+	ampSlider.position(75, 50);
+	ampSlider.style('width', sliderWidth);
+	ampSlider.changed(refreshVars);
+
+	baseSlider = createSlider(0, 100, 10);
+	baseSlider.position(75, 75);
+	baseSlider.style('width', sliderWidth);
+	baseSlider.changed(refreshVars);
+
+	sampleSlider = createSlider(fpAdj * log(120), fpAdj * log(2000), fpAdj * log(1000));
+	sampleSlider.position(75, 100);
+	sampleSlider.style('width', sliderWidth);
+	sampleSlider.changed(refreshVars);
+
+	periodLabel = createSpan('');
+	periodLabel.position(25, 25);
+	periodLabel.style('font-size', 12);
+	periodLabel.style('font-family', 'sans-serif');
+	periodLabel.style('color', 'silver');
+
+	ampLabel = createSpan('');
+	ampLabel.position(25, 50);
+	ampLabel.style('font-size', 12);
+	ampLabel.style('font-family', 'sans-serif');
+	ampLabel.style('color', 'silver');
+
+	baseLabel = createSpan('');
+	baseLabel.position(25, 75);
+	baseLabel.style('font-size', 12);
+	baseLabel.style('font-family', 'sans-serif');
+	baseLabel.style('color', 'silver');
+
+	sampleLabel = createSpan('');
+	sampleLabel.position(25, 100);
+	sampleLabel.style('font-size', 12);
+	sampleLabel.style('font-family', 'sans-serif');
+	sampleLabel.style('color', 'silver');
+
+	refreshVars();
+}
+
+function refreshVars() {
+	period = exp(periodSlider.value() / fpAdj);
+	amp = ampSlider.value();
+	base = baseSlider.value();
+	sFreq = exp(sampleSlider.value() / fpAdj);
+
+	periodLabel.html('P: ' + round(period));
+	ampLabel.html('A: ' + round(amp));
+	baseLabel.html('B: ' + round(base));
+	sampleLabel.html('Fs: ' + round(sFreq));
+}
+
 /* ####### DEBUG ####### */
 
 function onDebug() {
+	console.log('period:' + period + '\namp:' + amp + '\nbase:' + base + '\nsample:' + sFreq);
 	console.log("dY:" + round(dY * 10) / 10 + "\tdX:" + round(dX * 10) / 10 + "\ndT:" + round(dT * 10000) / 10000 + "\nHue:" + round(hue));
 }

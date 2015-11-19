@@ -22,7 +22,7 @@ function audioLoad() {
 		loadSound(host + 'sun2.mp3')
 	];
 
-	testSound = loadSound('audio/sun1.mp3');
+	//testSound = loadSound('audio/sun1.mp3');
 }
 
 function audioInit() {
@@ -50,7 +50,7 @@ function audioInit() {
 	};
 
 	bgcolor = new bgColorManager(color(0, 0, 20), transTime);
-	testSound1.loop();
+	//testSound1.loop();
 }
 
 function audioRefresh(data) {

@@ -23,7 +23,7 @@ function particleRefresh(data) {
 		var v = 2;
 		if (data.main == 'Snow') v *= .25;
 
-		for (var i = 0; i < 5 * amt * windowDensity; i++) {
+		for (var i = 0; i < 5 * amt; i++) {
 			var vX = (1 - random(2)) * amt;
 			var vY = v * (300 + random(35 * amt));
 
@@ -47,12 +47,12 @@ function fallingParticle(vX, vY, width, height, color) {
 		this.x += this.vX * deltaTime;
 		this.y += this.vY * deltaTime;
 
-		if (this.x < 0 || this.x > windowWidth) this.x = random(windowWidth);
+		if (this.x < 0 || this.x > windowWidth) this.x = random() * windowWidth;
 
 		if (this.y < 0) this.y = windowHeight - 1;
 		else if (this.y > windowHeight) this.y = 1;
-
-		noStroke();
+		strokeWeight(.35);
+		stroke('white');
 		fill(this.fill);
 		ellipse(this.x, this.y, this.width, this.height);
 	}

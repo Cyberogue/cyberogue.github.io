@@ -2,7 +2,9 @@ var particles = [];
 var snowColor = 'rgba(255,255,255,.9)';
 var rainColor = 'rgba(0,51,102,.5)';
 
-function particleInit() {}
+function particleInit() {
+	angleMode(DEGREES);
+}
 
 function particleUpdate() {
 	for (var i = 0; i < particles.length; i++) {
@@ -20,14 +22,18 @@ function particleRefresh(data) {
 		var l = amt / (1 + data.rain);
 		var c = lerpColor(color(snowColor), color(rainColor), l);
 
-		var v = 2;
-		if (data.main == 'Snow') v *= .25;
+		var vY0 = 2.5;
+		var vX0 = 100 * cos(data.wind);
+		if (data.main == 'Snow') {
+			vY0 *= .25;
+			vX0 *= 1.5;
+		}
 
-		for (var i = 0; i < 5 * amt; i++) {
-			var vX = (1 - random(2)) * amt;
-			var vY = v * (300 + random(35 * amt));
+		for (var i = 0; i < 5 * amt * windowWidthSpace; i++) {
+			var vX = vX0 * (1.25 - random() * .5);
+			var vY = vY0 * (300 + random() * 50);
 
-			particles.push(new fallingParticle(vX, vY, 5, 10, c));
+			particles.push(new fallingParticle(vX, vY, 7.5 * windowSpace, 15 * windowSpace, c));
 		}
 	}
 }

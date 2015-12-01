@@ -24,7 +24,9 @@ var stateCapitalTimer = 0; // Updates
 
 var tPrevious = 0;
 var deltaTime;
-var windowDensity;
+var windowSpace;
+var windowWidthSpace;
+var windowHeightSpace;
 
 /* ###### SETUP ######## */
 
@@ -32,7 +34,9 @@ function setup() {
 	createCanvas(windowWidth, windowHeight);
 	background(20)
 
-	windowDensity = (windowWidth * windowHeight) / (1920 * 1080);
+	windowWidthSpace = 1 - sq(1 - windowWidth / 1920);
+	windowHeightSpace = 1 - sq(1 - windowHeight / 1080);
+	windowSpace = windowWidthSpace * windowHeightSpace;
 
 	// Create query box
 	queryField = createInput('Search...');
@@ -46,7 +50,6 @@ function setup() {
 	toggleButton.mouseReleased(toggleQuery);
 	toggleButton.position(25, 25);
 
-	// Create text display
 	queryDisplay = createSpan('');
 	queryDisplay.style('align', 'center');
 	queryDisplay.style('font-size', 72);
@@ -54,6 +57,8 @@ function setup() {
 	queryDisplay.style('font-family', 'sans-serif');
 	queryDisplay.style('color', 'white');
 	queryDisplay.style('width', windowWidth.toString());
+	queryDisplay.style('text-overflow', 'ellipsis');
+	queryDisplay.style('white-space', 'nowrap');
 	queryDisplay.position(0, windowHeight / 2);
 
 	// Create description display
@@ -80,6 +85,7 @@ function setup() {
 	}
 
 	audioInit();
+	audioNew();
 	particleInit();
 }
 
@@ -130,11 +136,13 @@ function apiReceive() {
 /* ####### GUI ######### */
 
 function forceRefresh() {
+	cycleStates = false;
 	query = queryField.value();
 	setQuery(false);
 	nextUpdate = millis() + 1000 * updateRate;
 	stateCapitalTimer = 6;
 	apiRequest();
+	audioNew();
 }
 
 function setQuery(show) {
@@ -171,6 +179,7 @@ function draw() {
 		if (cycleStates && --stateCapitalTimer <= 0) {
 			stateCapitalTimer = 6;
 			query = stateCapitals[floor(random() * stateCapitals.length)];
+			audioNew();
 		}
 
 		apiRequest();

@@ -5,28 +5,25 @@ var tempScaleMax = 20;
 
 /* ####### CONTAINERS ###### */
 var audiolib = {};
+var audio = {};
 var bgcolors = {};
 
 /* ####### GLOBALS ###### */
 var bgcolor;
-
-var testSound;
 
 function audioLoad() {
 	//var host = getURL();
 	//host = host.substring(0, host.lastIndexOf('/')) + "/audio/";
 	var host = 'http://cyberogue.github.io/weather/audio/';
 
-	audiolib.sun = [
-		loadSound(host + 'sun1.mp3'),
-		loadSound(host + 'sun2.mp3')
+	audiolib.sun = [];
+
+	audiolib.wind = [
+		loadSound(host + '32_loop.wav')
 	];
 
-	//testSound = loadSound('audio/sun1.mp3');
-}
+	audiolib.rain = [];
 
-function audioInit() {
-	colorMode(RGB);
 	bgcolors = {
 		"default": "#92c9e9", // Default
 		"01d": "#55b2f4", // Clear sky
@@ -48,13 +45,45 @@ function audioInit() {
 		"50d": "#ced6d8", // Mist/fog
 		"50n": "#565c62",
 	};
+}
+
+function audioInit() {
+	colorMode(RGB);
 
 	bgcolor = new bgColorManager(color(0, 0, 20), transTime);
-	//testSound1.loop();
+
+	var logfile = "";
+	for (key in audiolib) {
+		logfile += key + " (" + audiolib[key].length + ")\n";
+		if (audiolib[key].length > 0) audio[key] = null;
+	}
+	console.log(logfile);
+}
+
+function audioNew() {
+	for (key in audio) {
+		if (audio[key])
+			audio[key].stop();
+
+		if (audiolib[key].length > 0) {
+			audio[key] = audiolib[key][floor(random(audiolib[key].length))];
+			audio[key].loop();
+			audio[key].pause();
+		} else {
+			audio[key] = null;
+		}
+	}
 }
 
 function audioRefresh(data) {
 	colorRefresh(data);
+
+	if (audio.wind) {
+		var a = map(data.windspeed, 1, 10, 0, 1);
+		a = constrain(a * a, 0, 1);
+		audio.wind.play();
+		audio.wind.amp(a);
+	}
 }
 
 function colorRefresh(data) {

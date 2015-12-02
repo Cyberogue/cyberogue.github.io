@@ -28,7 +28,8 @@ function audioLoad() {
 	];
 
 	audiolib.dry = [
-		loadSound(host + '85_loop.wav')];
+		loadSound(host + '85_loop.wav')
+	];
 
 	audiolib.wind = [
 		loadSound(host + '32_loop.wav')
@@ -74,7 +75,7 @@ function audioLoad() {
 
 /* ####### WEATHERS ###### */
 function cueSnow(data) {
-	if (data.snow < 1) {
+	if (data.snow < 0 && data.main != 'Snow') {
 		audio.snow.setVolume(0);
 		return;
 	}
@@ -86,29 +87,32 @@ function cueSnow(data) {
 }
 
 function cueRain(data) {
-	if (data.rain <= 0) {
+	if (data.rain <= 0 && data.main != 'Rain' && data.main != 'Drizzle') {
 		audio.rain.setVolume(0);
 		return;
 	}
 
-	var a = map(data.rain, 0, 5, 0, 1);
+	var a = map(0.5 + data.rain, 0, 5, 0, 1);
 	a = constrain(a * a, 0, 1);
 	//audio.rain.play();
+
+	console.log(a);
 	audio.rain.setVolume(a, transTime);
 
 }
 
 function cueHumidity(data) {
-	var rh = constrain(map(data.humidity, 50, 100, 0, 100), 0, 100);
+	var rh = constrain(map(data.humidity, 40, 100, 0, 100), 0, 100);
+
 	console.log(rh);
 	if (rh >= 30) {
-		audio.humid.setVolume(map(rh, 30, 100, .3, 1), transTime);
+		audio.humid.setVolume(.25 * (map(rh, 30, 100, .3, 1)), transTime);
 	} else {
 		audio.humid.setVolume(0);
 	}
 
 	if (rh <= 60) {
-		audio.dry.setVolume(1 - sq(1 - map(rh, 0, 60, 1, .3), transTime));
+		audio.dry.setVolume(.15 * (1 - sq(1 - map(rh, 0, 60, 1, .3)), transTime));
 	} else {
 		audio.dry.setVolume(0);
 	}

@@ -17,19 +17,19 @@ function particleRefresh(data) {
 
 	colorMode(RGB);
 	particles = [];
-	if (data.main == 'Rain' || data.main == 'Snow') {
-		var amt = 1 + data.rain + data.snow;
+	if (data.rain > 0 || data.snow > 0) {
+		var amt = data.rain + data.snow;
 		var l = amt / (1 + data.rain);
 		var c = lerpColor(color(snowColor), color(rainColor), l);
 
 		var vY0 = 2.5;
-		var vX0 = 100 * cos(data.wind);
+		var vX0 = 150 * cos(data.wind);
 		if (data.main == 'Snow') {
 			vY0 *= .25;
 			vX0 *= 1.5;
 		}
 
-		for (var i = 0; i < 5 * amt * windowWidthSpace; i++) {
+		for (var i = 0; i < ceil(4 * amt * windowWidthSpace); i++) {
 			var vX = vX0 * (1.25 - random() * .5);
 			var vY = vY0 * (300 + random() * 50);
 

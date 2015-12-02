@@ -108,7 +108,7 @@ function cueHumidity(data) {
 	}
 
 	if (rh <= 60) {
-		audio.dry.setVolume(map(rh, 0, 60, 1, .3), transTime);
+		audio.dry.setVolume(1 - sq(1 - map(rh, 0, 60, 1, .3), transTime));
 	} else {
 		audio.dry.setVolume(0);
 	}
@@ -129,9 +129,9 @@ function cueWind(data) {
 
 function cueStorm(data) {
 	if (floor(data.id / 100) == 2 || (data.id >= 960 && data.id <= 969)) {
-		audio.storm.setVolume(0, transTime);
-	} else {
 		audio.storm.setVolume(1, transTime);
+	} else {
+		audio.storm.setVolume(0, transTime);
 	}
 }
 

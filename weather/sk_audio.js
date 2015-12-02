@@ -23,9 +23,12 @@ function audioLoad() {
 
 	audiolib.cloudy = [];
 
-	audiolib.humid = [];
+	audiolib.humid = [
+		loadSound(host + '80_loop.wav')
+	];
 
-	audiolib.dry = [];
+	audiolib.dry = [
+		loadSound(host + '85_loop.wav')];
 
 	audiolib.wind = [
 		loadSound(host + '32_loop.wav')
@@ -39,7 +42,9 @@ function audioLoad() {
 		loadSound(host + '40_loop.wav')
 	];
 
-	audiolib.storm = [];
+	audiolib.storm = [
+		loadSound(host + '50_loop.wav')
+	];
 
 	audiolib.atmosphere = [];
 
@@ -69,41 +74,65 @@ function audioLoad() {
 
 /* ####### WEATHERS ###### */
 function cueSnow(data) {
-	if (data.snow < 1) audio.snow.pause();
-	else {
-		var a = map(data.snow, 0, 5, 0, 1);
-		a = constrain(a * a, 0, 1);
-		//audio.snow.play();
-		audio.snow.amp(a, transTime);
+	if (data.snow < 1) {
+		audio.snow.setVolume(0);
+		return;
 	}
+
+	var a = map(data.snow, 0, 5, 0, 1);
+	a = constrain(a * a, 0, 1);
+	//audio.snow.play();
+	audio.snow.setVolume(a, transTime);
 }
 
 function cueRain(data) {
-	if (data.rain <= 0) audio.rain.pause();
-	else {
-		var a = map(data.rain, 0, 5, 0, 1);
-		a = constrain(a * a, 0, 1);
-		//audio.rain.play();
-		audio.rain.amp(a, transTime);
+	if (data.rain <= 0) {
+		audio.rain.setVolume(0);
+		return;
 	}
+
+	var a = map(data.rain, 0, 5, 0, 1);
+	a = constrain(a * a, 0, 1);
+	//audio.rain.play();
+	audio.rain.setVolume(a, transTime);
+
 }
 
 function cueHumidity(data) {
+	var rh = constrain(map(data.humidity, 50, 100, 0, 100), 0, 100);
+	console.log(rh);
+	if (rh >= 30) {
+		audio.humid.setVolume(map(rh, 30, 100, .3, 1), transTime);
+	} else {
+		audio.humid.setVolume(0);
+	}
 
-}
-
-function cueWind(data) {
-	if (data.wind < .5) audio.wind.pause();
-	else {
-		var a = map(data.windspeed, 0, 10, 0, 1);
-		a = constrain(a * a, 0, 1);
-		//audio.wind.play();
-		audio.wind.amp(a, transTime);
+	if (rh <= 60) {
+		audio.dry.setVolume(map(rh, 0, 60, 1, .3), transTime);
+	} else {
+		audio.dry.setVolume(0);
 	}
 }
 
-function cueStorm(data) {
+function cueWind(data) {
+	if (data.wind < .5) {
+		audio.wind.setVolume(0);
+		return;
+	}
 
+	var a = map(data.windspeed, 0, 10, 0, 1);
+	a = constrain(a * a, 0, 1);
+	//audio.wind.play();
+	audio.wind.setVolume(a, transTime);
+
+}
+
+function cueStorm(data) {
+	if (floor(data.id / 100) == 2 || (data.id >= 960 && data.id <= 969)) {
+		audio.storm.setVolume(0, transTime);
+	} else {
+		audio.storm.setVolume(1, transTime);
+	}
 }
 
 function cueAtmo(data) {
@@ -130,7 +159,7 @@ function audioInit() {
 		if (audiolib[key].length > 0) audio[key] = null;
 
 		for (var i = 0; i < audiolib[key].length; i++) {
-			audiolib[key][i].amp(0);
+			audiolib[key][i].setVolume(0);
 			audiolib[key][i].loop();
 			//audiolib[key][i].pause();
 		}
@@ -140,15 +169,17 @@ function audioInit() {
 
 function audioNew() {
 	for (key in audio) {
-		if (audio[key])
+		if (audio[key]) {
+			audio[key].pause();
 			audio[key].stop();
+			delete audio[key];
+		}
 
 		if (audiolib[key].length > 0) {
 			audio[key] = audiolib[key][floor(random(audiolib[key].length))];
-			audio[key].pause();
 			audio[key].jump(0);
 		} else {
-			audio[key] = null;
+			delete audio[key];
 		}
 	}
 }
@@ -162,7 +193,7 @@ function audioRefresh(data) {
 	if (audio.storm) cueStorm(data);
 	if (audio.atmosphere) cueAtmo(data);
 
-	if (audio.humid && audio.dry) cueHumidity(data);
+	if (audio.humid || audio.dry) cueHumidity(data);
 	if (audio.cloudy && audio.sun && audio.moon) cueClouds(data);
 
 	cueOther(data);

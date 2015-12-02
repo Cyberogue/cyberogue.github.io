@@ -13,6 +13,7 @@ var queryField;
 var toggleButton;
 var queryDisplay;
 var descDisplay;
+var volSlider;
 var cycleStates = true;
 var showQuery = false;
 
@@ -71,6 +72,12 @@ function setup() {
 	descDisplay.style('width', windowWidth.toString());
 	descDisplay.position(0, windowHeight / 2 + 100);
 
+	volSlider = createSlider(0, 1000, 750);
+	if (windowWidth * .5 < 20) volSlider.style('width', '20px');
+	else volSlider.style('width', '5%');
+	volSlider.position(20, windowHeight - 20);
+	volSlider.changed(updateMasterVolume);
+
 	// Open API
 	api = new OpenWeatherMap("eb7c74d1367f20a87ddff4cdbfd9aab0");
 	//OpenWeatherMap.debug = true;
@@ -90,6 +97,12 @@ function setup() {
 }
 
 /* ####### RUNTIME ###### */
+
+function updateMasterVolume() {
+	masterVolume = volSlider.value() / 1000;
+	audioRefresh();
+	console.log(masterVolume);
+}
 
 function apiRequest() {
 	api.request(query);

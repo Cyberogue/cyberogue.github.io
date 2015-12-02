@@ -10,6 +10,7 @@ var bgcolors = {};
 
 /* ####### GLOBALS ###### */
 var bgcolor;
+var masterVolume = 1;
 
 function audioLoad() {
 	//var host = getURL();
@@ -18,11 +19,29 @@ function audioLoad() {
 
 	audiolib.sun = [];
 
+	audiolib.moon = [];
+
+	audiolib.cloudy = [];
+
+	audiolib.humid = [];
+
+	audiolib.dry = [];
+
 	audiolib.wind = [
 		loadSound(host + '32_loop.wav')
 	];
 
-	audiolib.rain = [];
+	audiolib.rain = [
+		loadSound(host + '10_loop.wav')
+	];
+
+	audiolib.snow = [
+		loadSound(host + '40_loop.wav')
+	];
+
+	audiolib.storm = [];
+
+	audiolib.atmosphere = [];
 
 	bgcolors = {
 		"default": "#92c9e9", // Default
@@ -47,6 +66,59 @@ function audioLoad() {
 	};
 }
 
+
+/* ####### WEATHERS ###### */
+function cueSnow(data) {
+	if (data.snow < 1) audio.snow.pause();
+	else {
+		var a = map(data.snow, 0, 5, 0, 1);
+		a = constrain(a * a, 0, 1);
+		//audio.snow.play();
+		audio.snow.amp(a, transTime);
+	}
+}
+
+function cueRain(data) {
+	if (data.rain <= 0) audio.rain.pause();
+	else {
+		var a = map(data.rain, 0, 5, 0, 1);
+		a = constrain(a * a, 0, 1);
+		//audio.rain.play();
+		audio.rain.amp(a, transTime);
+	}
+}
+
+function cueHumidity(data) {
+
+}
+
+function cueWind(data) {
+	if (data.wind < .5) audio.wind.pause();
+	else {
+		var a = map(data.windspeed, 0, 10, 0, 1);
+		a = constrain(a * a, 0, 1);
+		//audio.wind.play();
+		audio.wind.amp(a, transTime);
+	}
+}
+
+function cueStorm(data) {
+
+}
+
+function cueAtmo(data) {
+
+}
+
+function cueClouds(data) {
+
+}
+
+function cueOther(data) {
+
+}
+
+/* ####### FUNCTIONS ###### */
 function audioInit() {
 	colorMode(RGB);
 
@@ -56,6 +128,12 @@ function audioInit() {
 	for (key in audiolib) {
 		logfile += key + " (" + audiolib[key].length + ")\n";
 		if (audiolib[key].length > 0) audio[key] = null;
+
+		for (var i = 0; i < audiolib[key].length; i++) {
+			audiolib[key][i].amp(0);
+			audiolib[key][i].loop();
+			//audiolib[key][i].pause();
+		}
 	}
 	console.log(logfile);
 }
@@ -67,8 +145,8 @@ function audioNew() {
 
 		if (audiolib[key].length > 0) {
 			audio[key] = audiolib[key][floor(random(audiolib[key].length))];
-			audio[key].loop();
 			audio[key].pause();
+			audio[key].jump(0);
 		} else {
 			audio[key] = null;
 		}
@@ -78,12 +156,16 @@ function audioNew() {
 function audioRefresh(data) {
 	colorRefresh(data);
 
-	if (audio.wind) {
-		var a = map(data.windspeed, 1, 10, 0, 1);
-		a = constrain(a * a, 0, 1);
-		audio.wind.play();
-		audio.wind.amp(a);
-	}
+	if (audio.wind) cueWind(data);
+	if (audio.snow) cueSnow(data);
+	if (audio.rain) cueRain(data);
+	if (audio.storm) cueStorm(data);
+	if (audio.atmosphere) cueAtmo(data);
+
+	if (audio.humid && audio.dry) cueHumidity(data);
+	if (audio.cloudy && audio.sun && audio.moon) cueClouds(data);
+
+	cueOther(data);
 }
 
 function colorRefresh(data) {

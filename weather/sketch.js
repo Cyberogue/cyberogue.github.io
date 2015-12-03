@@ -127,7 +127,6 @@ function apiReceive() {
 
 	if (OpenWeatherMap.data.snow) container.snow = OpenWeatherMap.data.snow["3h"];
 	else container.snow = 0;
-
 	// Update text and description
 	queryDisplay.html(container.name);
 	var desc = container.description.charAt(0).toUpperCase() + container.description.slice(1).toLowerCase();

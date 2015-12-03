@@ -13,8 +13,6 @@ function particleUpdate() {
 }
 
 function particleRefresh(data) {
-	console.log(data);
-
 	colorMode(RGB);
 	particles = [];
 	if (data.main == 'Snow' || data.main == 'Rain' || data.main == 'Drizzle') {

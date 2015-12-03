@@ -18,11 +18,11 @@ function audioLoad() {
 	var host = 'http://cyberogue.github.io/weather/audio/';
 
 	audiolib = {};
-	audiolib.clear_d = [
+	audiolib.day = [
 		loadSound(host + '20d_loop.wav')
 	];
 
-	audiolib.clear_n = [
+	audiolib.night = [
 		loadSound(host + '22n_loop.wav')
 	];
 
@@ -54,7 +54,9 @@ function audioLoad() {
 		loadSound(host + '50_loop.wav')
 	];
 
-	audiolib.atmosphere = [];
+	audiolib.atmosphere = [
+		loadSound(host + '60_loop.wav')
+	];
 
 	bgcolors = {
 		"default": "#92c9e9", // Default
@@ -103,23 +105,20 @@ function cueRain(data) {
 	a = constrain(a * a, 0, 1);
 	//audio.rain.play();
 
-	console.log(a);
 	audio.rain.setVolume(a, transTime);
-
+	audio.day.setVolume(1);
 }
 
 function cueHumidity(data) {
-	var rh = constrain(map(data.humidity, 40, 100, 0, 100), 0, 100);
-
-	console.log(rh);
+	var rh = constrain(map(data.humidity, 20, 100, 0, 100), 0, 100);
 	if (rh >= 30) {
-		audio.humid.setVolume(.5 * (map(rh, 30, 100, .3, 1)), transTime);
+		audio.humid.setVolume(.5 * (map(rh, 20, 100, .3, 1)), transTime);
 	} else {
 		audio.humid.setVolume(0);
 	}
 
 	if (rh <= 60) {
-		audio.dry.setVolume(.15 * (1 - sq(1 - map(rh, 0, 60, 1, .3)), transTime));
+		audio.dry.setVolume(.15 * (1 - sq(1 - map(rh, 0, 80, 1, .3)), transTime));
 	} else {
 		audio.dry.setVolume(0);
 	}
@@ -147,34 +146,24 @@ function cueStorm(data) {
 }
 
 function cueAtmo(data) {
-
+	//audio.atmosphere.setVolume(1);
 }
 
 function cueClouds(data) {
 	var p = constrain(data.clouds / 100, 0, 1);
+	//audio.cloudy.setVolume(1);
+	console.log(p);
 
-	console.log('% ' + p);
-	if (data.clouds < 70) {
+	// Clear skies
+	if (p < .6) {
 		if (data.icon[2] == 'n') {
-			console.log('n ' + (1 - p));
-			audio.clear_d.setVolume(0, transTime);
-			audio.clear_n.setVolume(1 - p, transTime);
+			console.log('night ' + map(p, 0, .6, 1, 0));
 		} else {
-			console.log('d ' + (1 - p));
-			audio.clear_n.setVolume(0, transTime);
-			audio.clear_d.setVolume(1 - p, transTime)
+			console.log('day ' + map(p, 0, .6, 1, 0));
 		}
 	} else {
-		audio.cloudy.setVolume(0, transTime);
-	}
-
-	if (data.clouds > 30) {
-		console.log('c ' + p);
-		''
-		audio.cloudy.setVolume(p, transTime);
-	} else {
-		audio.clear_d.setVolume(0, transTime);
-		audio.clear_n.setVolume(0, transTime);
+		audio.night.setVolume(0);
+		audio.day.setVolume(0);
 	}
 }
 
@@ -220,6 +209,8 @@ function audioNew() {
 }
 
 function audioRefresh(data) {
+	console.log(data);
+
 	colorRefresh(data);
 
 	if (audio.wind) cueWind(data);
@@ -227,9 +218,8 @@ function audioRefresh(data) {
 	if (audio.rain) cueRain(data);
 	if (audio.storm) cueStorm(data);
 	if (audio.atmosphere) cueAtmo(data);
-
 	if (audio.humid && audio.dry) cueHumidity(data);
-	if (audio.cloudy && audio.clear_d && audio.clear_n) cueClouds(data);
+	if (audio.cloudy && audio.day && audio.night) cueClouds(data);
 
 	cueOther(data);
 }

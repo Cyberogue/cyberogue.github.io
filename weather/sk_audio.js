@@ -17,11 +17,18 @@ function audioLoad() {
 	//host = host.substring(0, host.lastIndexOf('/')) + "/audio/";
 	var host = 'http://cyberogue.github.io/weather/audio/';
 
-	audiolib.sun = [];
+	audiolib = {};
+	audiolib.clear_d = [
+		loadSound(host + '20d_loop.wav')
+	];
 
-	audiolib.moon = [];
+	audiolib.clear_n = [
+		loadSound(host + '22n_loop.wav')
+	];
 
-	audiolib.cloudy = [];
+	audiolib.cloudy = [
+		loadSound(host + '20c_loop.wav')
+	];
 
 	audiolib.humid = [
 		loadSound(host + '80_loop.wav')
@@ -106,7 +113,7 @@ function cueHumidity(data) {
 
 	console.log(rh);
 	if (rh >= 30) {
-		audio.humid.setVolume(.25 * (map(rh, 30, 100, .3, 1)), transTime);
+		audio.humid.setVolume(.5 * (map(rh, 30, 100, .3, 1)), transTime);
 	} else {
 		audio.humid.setVolume(0);
 	}
@@ -127,7 +134,7 @@ function cueWind(data) {
 	var a = map(data.windspeed, 0, 10, 0, 1);
 	a = constrain(a * a, 0, 1);
 	//audio.wind.play();
-	audio.wind.setVolume(a, transTime);
+	audio.wind.setVolume(.75 * a, transTime);
 
 }
 
@@ -144,7 +151,31 @@ function cueAtmo(data) {
 }
 
 function cueClouds(data) {
+	var p = constrain(data.clouds / 100, 0, 1);
 
+	console.log('% ' + p);
+	if (data.clouds < 70) {
+		if (data.icon[2] == 'n') {
+			console.log('n ' + (1 - p));
+			audio.clear_d.setVolume(0, transTime);
+			audio.clear_n.setVolume(1 - p, transTime);
+		} else {
+			console.log('d ' + (1 - p));
+			audio.clear_n.setVolume(0, transTime);
+			audio.clear_d.setVolume(1 - p, transTime)
+		}
+	} else {
+		audio.cloudy.setVolume(0, transTime);
+	}
+
+	if (data.clouds > 30) {
+		console.log('c ' + p);
+		''
+		audio.cloudy.setVolume(p, transTime);
+	} else {
+		audio.clear_d.setVolume(0, transTime);
+		audio.clear_n.setVolume(0, transTime);
+	}
 }
 
 function cueOther(data) {
@@ -197,8 +228,8 @@ function audioRefresh(data) {
 	if (audio.storm) cueStorm(data);
 	if (audio.atmosphere) cueAtmo(data);
 
-	if (audio.humid || audio.dry) cueHumidity(data);
-	if (audio.cloudy && audio.sun && audio.moon) cueClouds(data);
+	if (audio.humid && audio.dry) cueHumidity(data);
+	if (audio.cloudy && audio.clear_d && audio.clear_n) cueClouds(data);
 
 	cueOther(data);
 }

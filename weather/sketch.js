@@ -11,9 +11,11 @@ var query;
 
 var queryField;
 var toggleButton;
+var unitsButton;
 var queryDisplay;
 var descDisplay;
 var volSlider;
+var metricUnits = true;
 var cycleStates = true;
 var showQuery = false;
 
@@ -43,14 +45,27 @@ function setup() {
 	queryField = createInput('Search...');
 	queryField.changed(forceRefresh);
 	queryField.style('width', '100');
+	queryField.style('border', 'none');
 	queryField.position(50, 25);
 	queryField.hide();
 
 	// Create submit button
-	toggleButton = createButton('>');
+	toggleButton = createButton('<b>></b>');
 	toggleButton.mouseReleased(toggleQuery);
+	toggleButton.style('border', 'none');
+	toggleButton.style('color', 'white');
+	toggleButton.style('background', 'none');
 	toggleButton.position(25, 25);
 
+	// Create units button
+	unitsButton = createButton('<b>°C</b>');
+	unitsButton.mouseReleased(toggleUnits);
+	unitsButton.style('border', 'none');
+	unitsButton.style('color', 'white');
+	unitsButton.style('background', 'none');
+	unitsButton.position(windowWidth - 50, 25);
+
+	// Create name `
 	queryDisplay = createSpan('');
 	queryDisplay.style('align', 'center');
 	queryDisplay.style('font-size', 72);
@@ -130,7 +145,11 @@ function apiReceive() {
 	// Update text and description
 	queryDisplay.html(container.name);
 	var desc = container.description.charAt(0).toUpperCase() + container.description.slice(1).toLowerCase();
-	descDisplay.html(desc + ' | ' + round(container.temp) + '°C');
+
+	if (metricUnits)
+		descDisplay.html(desc + ' | ' + round(container.temp) + '°C');
+	else
+		descDisplay.html(desc + ' | ' + round(32 + 9 / 5 * container.temp) + '°F');
 
 	// Update audio
 	audioRefresh(container);
@@ -153,15 +172,22 @@ function setQuery(show) {
 	showQuery = show;
 	if (show) {
 		queryField.show();
-		toggleButton.html('<');
+		toggleButton.html('<b><</b>');
 	} else {
 		queryField.hide();
-		toggleButton.html('>');
+		toggleButton.html('<b>></b>');
 	}
 }
 
 function toggleQuery() {
 	setQuery(!showQuery);
+}
+
+function toggleUnits() {
+	metricUnits = !metricUnits;
+	if (metricUnits) unitsButton.html('<b>°C</b>');
+	else unitsButton.html('<b>°F</b>');
+	apiRequest();
 }
 
 /* ####### ENGINE ###### */

@@ -1,7 +1,7 @@
 /* ####### CONFIG ###### */
 var transTime = 2;
-var tempScaleMin = -10;
-var tempScaleMax = 20;
+var tempScaleMin = -30;
+var tempScaleMax = 30;
 
 /* ####### CONTAINERS ###### */
 var audiolib = {};
@@ -83,95 +83,113 @@ function audioLoad() {
 
 
 /* ####### WEATHERS ###### */
-function cueSnow(data) {
-	if (data.snow < 0 && data.main != 'Snow') {
-		audio.snow.setVolume(0);
-		return;
-	}
 
-	var a = map(data.snow, 0, 5, 0, 1);
-	a = constrain(a * a, 0, 1);
-	//audio.snow.play();
-	audio.snow.setVolume(a, transTime);
+function cueWind(data) {
+	mapData('wind', data.windspeed, 0, 10, 0, .1, .6);
+}
+
+function cueSnow(data) {
+	if (data.snow == 0 && data.main == 'Snow')
+		setData('snow', .2);
+	else
+		mapData('snow', data.snow, 1, 5, .2, .2);
 }
 
 function cueRain(data) {
-	if (data.rain <= 0 && data.main != 'Rain' && data.main != 'Drizzle') {
-		audio.rain.setVolume(0);
-		return;
-	}
-
-	var a = map(0.5 + data.rain, 0, 5, 0, 1);
-	a = constrain(a * a, 0, 1);
-	//audio.rain.play();
-
-	audio.rain.setVolume(a, transTime);
-	audio.day.setVolume(1);
-}
-
-function cueHumidity(data) {
-	var rh = constrain(map(data.humidity, 20, 100, 0, 100), 0, 100);
-	if (rh >= 30) {
-		audio.humid.setVolume(.5 * (map(rh, 20, 100, .3, 1)), transTime);
-	} else {
-		audio.humid.setVolume(0);
-	}
-
-	if (rh <= 60) {
-		audio.dry.setVolume(.15 * (1 - sq(1 - map(rh, 0, 80, 1, .3)), transTime));
-	} else {
-		audio.dry.setVolume(0);
-	}
-}
-
-function cueWind(data) {
-	if (data.wind < .5) {
-		audio.wind.setVolume(0);
-		return;
-	}
-
-	var a = map(data.windspeed, 0, 10, 0, 1);
-	a = constrain(a * a, 0, 1);
-	//audio.wind.play();
-	audio.wind.setVolume(.75 * a, transTime);
-
+	if (data.rain == 0 && (data.main == 'Rain' || data.main == 'Drizzle'))
+		setData('rain', .05);
+	else
+		mapData('rain', data.rain, 0, 5, .2, .2);
 }
 
 function cueStorm(data) {
-	if (floor(data.id / 100) == 2 || (data.id >= 960 && data.id <= 969)) {
-		audio.storm.setVolume(1, transTime);
-	} else {
-		audio.storm.setVolume(0, transTime);
-	}
+	if (floor(data.id / 100) == 2 || (data.id >= 900 && data.id <= 902) || (data.id >= 960 && data.id <= 962))
+		setData('storm', 1);
+	else
+		setData('storm', 0);
 }
 
 function cueAtmo(data) {
-	//audio.atmosphere.setVolume(1);
+	if (floor(data.id / 100) == 7 || data.icon == '50n' || data.icon == '50d')
+		setData('atmosphere', 1);
+	else
+		setData('atmosphere', 0);
 }
 
-function cueClouds(data) {
-	var p = constrain(data.clouds / 100, 0, 1);
-	//audio.cloudy.setVolume(1);
-	console.log(p);
+function cueHumidity(data) {
+	mapData('dry', 100 - data.humidity, 0, 100, .4, .3, .5);
+	mapData('humid', data.humidity, 0, 100, .4, .4);
+}
 
-	// Clear skies
-	if (p < .6) {
-		if (data.icon[2] == 'n') {
-			console.log('night ' + map(p, 0, .6, 1, 0));
-		} else {
-			console.log('day ' + map(p, 0, .6, 1, 0));
-		}
+function cueCloudCover(data) {
+	mapData('cloudy', data.clouds, 0, 100, .5, .3);
+
+	if (data.icon[2] == 'n') {
+		mapData('night', 100 - data.clouds, 0, 120, .5, .2, .8);
+		setData('day', 0);
 	} else {
-		audio.night.setVolume(0);
-		audio.day.setVolume(0);
+		mapData('day', 100 - data.clouds, 0, 120, .5, .2, .8);
+		setData('night', 0);
 	}
 }
 
-function cueOther(data) {
+function audioRefresh(data) {
+	console.log(data);
 
+	colorRefresh(data);
+
+	cueWind(data);
+	cueSnow(data);
+	cueRain(data);
+	cueStorm(data);
+	cueAtmo(data);
+	cueHumidity(data);
+	cueCloudCover(data);
 }
 
 /* ####### FUNCTIONS ###### */
+function mapData(tag, value, min, max, vthresh, vmin, vmax) {
+	if (!audio[tag]) return;
+	if (!vmin) vmin = 0;
+	if (!vmax) vmax = 1;
+
+	var v = map(value, min, max, 0, 1);
+
+	if (v <= vthresh) {
+		v = 0;
+	} else {
+		v = constrain(v, vmin, vmax);
+		console.log('v:' + round(100 * v) + '%\t' + tag);
+	}
+
+	audio[tag].setVolume(v);
+}
+
+// alpha controls the curve amount between 0 and 1, with .5 being linear. A value of 0 curves up, a value of 1 curves down
+// it's  simplification of alpha(x^2) + (1-alpha)(1 - (1-x^2))
+function mapDataCurve(tag, value, alpha, min, max, vthresh, vmin, vmax) {
+	if (!audio[tag]) return;
+	if (!vmin) vmin = 0;
+	if (!vmax) vmax = 1;
+
+	var v = map(value, min, max, 0, 1);
+
+	if (v <= vthresh) {
+		v = 0;
+	} else {
+		// Curve
+		v = constrain(alpha * v * (2 * v - 2) + (2 - v) * v, vmin, vmax);
+		console.log('v:' + round(100 * v) + '%\t' + tag);
+	}
+
+	audio[tag].setVolume(constrain(v, vmin, vmax));
+}
+
+function setData(tag, value) {
+	if (value > 0) console.log('v:' + round(100 * value) + '%\t' + tag);
+	if (audio[tag]) audio[tag].setVolume(constrain(value, 0, 1));
+}
+
 function audioInit() {
 	colorMode(RGB);
 
@@ -183,8 +201,8 @@ function audioInit() {
 		if (audiolib[key].length > 0) audio[key] = null;
 
 		for (var i = 0; i < audiolib[key].length; i++) {
-			audiolib[key][i].setVolume(0);
 			audiolib[key][i].loop();
+			audiolib[key][i].setVolume(0);
 			//audiolib[key][i].pause();
 		}
 	}
@@ -202,26 +220,11 @@ function audioNew() {
 		if (audiolib[key].length > 0) {
 			audio[key] = audiolib[key][floor(random(audiolib[key].length))];
 			audio[key].jump(0);
+			audio[key].setVolume(0);
 		} else {
 			delete audio[key];
 		}
 	}
-}
-
-function audioRefresh(data) {
-	console.log(data);
-
-	colorRefresh(data);
-
-	if (audio.wind) cueWind(data);
-	if (audio.snow) cueSnow(data);
-	if (audio.rain) cueRain(data);
-	if (audio.storm) cueStorm(data);
-	if (audio.atmosphere) cueAtmo(data);
-	if (audio.humid && audio.dry) cueHumidity(data);
-	if (audio.cloudy && audio.day && audio.night) cueClouds(data);
-
-	cueOther(data);
 }
 
 function colorRefresh(data) {
@@ -238,12 +241,12 @@ function colorRefresh(data) {
 
 	// Adjust for temperature
 	var tempAdj = map(data.temp, tempScaleMin, tempScaleMax, 0, 1);
-	tempAdj = constrain(tempAdj, 0, 1)
-	b = constrain(b * tempAdj, 20, 240);
+	tempAdj = .5 + constrain(tempAdj, 0, 1)
+	s *= tempAdj
 
-	if (b * s / 10000 > .8) {
-		queryDisplay.style('color', 'black');
-		descDisplay.style('color', 'black');
+	if ((b * (100 - s)) / 10000 > .70) {
+		queryDisplay.style('color', '#222');
+		descDisplay.style('color', '#222');
 	} else {
 		queryDisplay.style('color', 'white');
 		descDisplay.style('color', 'white');

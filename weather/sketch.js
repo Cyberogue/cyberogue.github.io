@@ -87,6 +87,16 @@ function setup() {
 	descDisplay.style('width', windowWidth.toString());
 	descDisplay.position(0, windowHeight / 2 + 100);
 
+	var nameDisplay = createSpan('Alice Quiros');
+	nameDisplay.style('align', 'right');
+	nameDisplay.style('font-size', 10);
+	nameDisplay.style('text-align', 'right');
+	nameDisplay.style('font-family', 'sans-serif');
+	nameDisplay.style('opacity', '0.5');
+	nameDisplay.style('color', 'white');
+	nameDisplay.style('width', '100px');
+	nameDisplay.position(windowWidth - 120, windowHeight - 20);
+
 	// Open API
 	api = new OpenWeatherMap("eb7c74d1367f20a87ddff4cdbfd9aab0");
 	//OpenWeatherMap.debug = true;
